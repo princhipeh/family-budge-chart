@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Family Budget 2025</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f0f1a; font-family: system-ui, sans-serif; color: #fff; padding: 24px 16px; }
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .subtitle { color: #888; font-size: 13px; margin-bottom: 24px; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .card { background: #1a1a2e; border-radius: 12px; padding: 14px; border: 1px solid #2a2a4a; }
+    .card-label { color: #888; font-size: 11px; margin-bottom: 4px; }
+    .card-value { font-size: 18px; font-weight: 700; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .tab { padding: 7px 14px; border-radius: 20px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+    .tab.active { background: #7c6ef5; color: #fff; }
+    .tab.inactive { background: #1a1a2e; color: #888; }
+    .chart-wrap { background: #1a1a2e; border-radius: 12px; padding: 20px 8px 16px; border: 1px solid #2a2a4a; overflow-x: auto; }
+    .chart-inner { display: flex; min-width: 680px; }
+    .y-axis { display: flex; flex-direction: column; justify-content: space-between; height: 220px; padding: 0 8px 28px 0; min-width: 44px; }
+    .y-label { font-size: 10px; color: #555; text-align: right; }
+    .bars-area { flex: 1; }
+    .bars { display: flex; align-items: flex-end; justify-content: space-around; height: 220px; padding: 0 4px; }
+    .group { display: flex; flex-direction: column; align-items: center; }
+    .group-bars { display: flex; align-items: flex-end; gap: 3px; }
+    .bar { width: 18px; border-radius: 4px 4px 0 0; transition: height 0.3s; cursor: pointer; }
+    .bar:hover { opacity: 0.75; }
+    .month-label { font-size: 10px; color: #666; margin-top: 6px; }
+    .legend { display: flex; gap: 16px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #aaa; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+    .tooltip { position: fixed; background: #12122a; border: 1px solid #444; border-radius: 8px; padding: 10px 14px; font-size: 12px; pointer-events: none; z-index: 100; display: none; min-width: 170px; }
+    .tooltip-title { font-weight: 700; margin-bottom: 6px; }
+    .tooltip-row { display: flex; justify-content: space-between; gap: 16px; margin: 3px 0; }
+    .tooltip-lbl { color: #888; }
+    .footer { color: #555; font-size: 11px; text-align: center; margin-top: 16px; }
+  </style>
+</head>
+<body>
+
+<h1>🏠 Family Budget — 2025</h1>
+<p class="subtitle">Full year overview · Jan – Dec 2025</p>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-label">Total Contributions</div>
+    <div class="card-value" style="color:#7c6ef5">£31,438</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Total Outgoings</div>
+    <div class="card-value" style="color:#e85d7a">£33,807</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Annual Shortfall</div>
+    <div class="card-value" style="color:#facc15">-£2,369</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showView('overview',this)">Contributions vs Outgoings</button>
+  <button class="tab inactive" onclick="showView('contributions',this)">Prince vs Clara</button>
+  <button class="tab inactive" onclick="showView('outgoings',this)">Fixed vs Variable</button>
+</div>
+
+<div class="chart-wrap">
+  <div class="chart-inner">
+    <div class="y-axis" id="yAxis"></div>
+    <div class="bars-area">
+      <div class="bars" id="bars"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </div>
+</div>
+
+<p class="footer">Say "update the chart" in Claude after adding new data</p>
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  const views = {
+    overview: {
+      max: 3500,
+      yLabels: ["£3.5k","£3.0k","£2.5k","£2.0k","£1.5k","£1.0k","£0.5k","£0"],
+      series: [
+        { label:"Contributions", color:"#7c6ef5", values:[2224.19,2880.55,2880.55,2669.55,2804.02,2804.02,2634,2573.88,2592,2441.81,2542.08,2392.08] },
+        { label:"Outgoings",     color:"#e85d7a", values:[2855.73,2880.55,2880.55,2669.55,2804.02,2804.02,2918.57,2699.24,2592.40,2442.40,2768.25,2492.40] }
+      ]
+    },
+    contributions: {
+      max: 3500,
+      yLabels: ["£3.5k","£3.0k","£2.5k","£2.0k","£1.5k","£1.0k","£0.5k","£0"],
+      series: [
+        { label:"Prince", color:"#7c6ef5", values:[1374.55,2000,2000,1869.55,2000,2000,1934,1873.88,1942,1941.81,2100,2000] },
+        { label:"Clara",  color:"#f59e0b", values:[849.64,880.55,880.55,800,804.02,804.02,700,700,650,500,442.08,392.08] }
+      ]
+    },
+    outgoings: {
+      max: 3000,
+      yLabels: ["£3.0k","£2.5k","£2.0k","£1.5k","£1.0k","£0.5k","£0"],
+      series: [
+        { label:"Fixed",    color:"#e85d7a", values:[1705.73,1730.55,1730.55,1519.55,1754.02,1754.02,1928.57,1749.24,1642.40,1642.40,1642.40,1742.40] },
+        { label:"Variable", color:"#4ade80", values:[1150,1150,1150,1150,1050,1050,990,950,950,800,1125.85,750] }
+      ]
+    }
+  };
+
+  const HEIGHT = 200;
+  let activeView = 'overview';
+
+  const fmt = v => '£' + v.toLocaleString('en-GB', {minimumFractionDigits:2,maximumFractionDigits:2});
+
+  function showView(view, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.className = 'tab inactive');
+    btn.className = 'tab active';
+    activeView = view;
+    render(view);
+  }
+
+  function render(view) {
+    const { max, yLabels, series } = views[view];
+    document.getElementById('yAxis').innerHTML = yLabels.map(l => `<div class="y-label">${l}</div>`).join('');
+
+    document.getElementById('bars').innerHTML = months.map((m, mi) => `
+      <div class="group">
+        <div class="group-bars"
+          onmouseenter="showTip(event,'${m}',${mi})"
+          onmouseleave="hideTip()">
+          ${series.map(s => {
+            const h = Math.max(2, Math.round((s.values[mi] / max) * HEIGHT));
+            return `<div class="bar" style="height:${h}px;background:${s.color}" title="${s.label}: ${fmt(s.values[mi])}"></div>`;
+          }).join('')}
+        </div>
+        <div class="month-label">${m}</div>
+      </div>`).join('');
+
+    document.getElementById('legend').innerHTML = series.map(s =>
+      `<div class="legend-item"><div class="legend-dot" style="background:${s.color}"></div>${s.label}</div>`
+    ).join('');
+  }
+
+  function showTip(e, month, mi) {
+    const { series } = views[activeView];
+    const tip = document.getElementById('tooltip');
+    tip.style.display = 'block';
+    tip.style.left = (e.clientX + 14) + 'px';
+    tip.style.top  = (e.clientY - 10) + 'px';
+    tip.innerHTML = `<div class="tooltip-title">${month} 2025</div>` +
+      series.map(s => `<div class="tooltip-row"><span class="tooltip-lbl" style="color:${s.color}">${s.label}</span><span>${fmt(s.values[mi])}</span></div>`).join('');
+  }
+
+  function hideTip() { document.getElementById('tooltip').style.display='none'; }
+
+  render('overview');
+</script>
+</body>
+</html>
