@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Family Budget Chart</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.8.0/Recharts.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f0f1a; font-family: system-ui, sans-serif; color: #fff; padding: 24px; }
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .subtitle { color: #888; font-size: 13px; margin-bottom: 24px; }
+    .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+    .card { background: #1a1a2e; border-radius: 12px; padding: 16px; border: 1px solid #2a2a4a; }
+    .card-month { color: #888; font-size: 12px; margin-bottom: 6px; }
+    .card-contrib { font-size: 20px; font-weight: 700; color: #7c6ef5; margin-bottom: 2px; }
+    .card-label { font-size: 11px; color: #888; margin-bottom: 10px; }
+    .card-row { display: flex; justify-content: space-between; }
+    .card-out { font-size: 15px; font-weight: 600; color: #e85d7a; }
+    .card-surplus { font-size: 15px; font-weight: 600; }
+    .card-sublabel { font-size: 10px; color: #888; margin-top: 2px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .tab { padding: 7px 14px; border-radius: 20px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+    .tab.active { background: #7c6ef5; color: #fff; }
+    .tab.inactive { background: #1a1a2e; color: #888; }
+    .chart-wrap { background: #1a1a2e; border-radius: 12px; padding: 20px 8px 12px; border: 1px solid #2a2a4a; }
+    .bars { display: flex; align-items: flex-end; justify-content: center; gap: 32px; height: 220px; padding: 0 16px; }
+    .group { display: flex; align-items: flex-end; gap: 8px; flex-direction: column; align-items: center; }
+    .group-bars { display: flex; align-items: flex-end; gap: 6px; }
+    .bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .bar { width: 36px; border-radius: 6px 6px 0 0; transition: all 0.3s; position: relative; }
+    .bar:hover { opacity: 0.85; }
+    .bar-val { font-size: 9px; color: #aaa; text-align: center; }
+    .month-label { font-size: 12px; color: #888; margin-top: 8px; }
+    .legend { display: flex; gap: 20px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #aaa; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+    .footer { color: #555; font-size: 11px; text-align: center; margin-top: 16px; }
+    .y-axis { display: flex; flex-direction: column; justify-content: space-between; height: 220px; padding: 0 8px 0 0; }
+    .y-label { font-size: 10px; color: #555; }
+    .chart-inner { display: flex; }
+  </style>
+</head>
+<body>
+
+  <h1>🏠 Family Budget Overview</h1>
+  <p class="subtitle">Monthly comparison — contributions vs outgoings</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-month">January 2026</div>
+      <div class="card-contrib">£2,293.58</div>
+      <div class="card-label">Contributions</div>
+      <div class="card-row">
+        <div><div class="card-out">£2,272.53</div><div class="card-sublabel">Outgoings</div></div>
+        <div style="text-align:right"><div class="card-surplus" style="color:#4ade80">£21.05</div><div class="card-sublabel">Surplus</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-month">February 2026</div>
+      <div class="card-contrib">£1,974.15</div>
+      <div class="card-label">Contributions</div>
+      <div class="card-row">
+        <div><div class="card-out">£1,974.15</div><div class="card-sublabel">Outgoings</div></div>
+        <div style="text-align:right"><div class="card-surplus" style="color:#facc15">£0.00</div><div class="card-sublabel">Surplus</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showView('overview', this)">Contributions vs Outgoings</button>
+    <button class="tab inactive" onclick="showView('contributions', this)">Prince vs Clara</button>
+    <button class="tab inactive" onclick="showView('outgoings', this)">Fixed vs Variable</button>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-inner">
+      <div class="y-axis">
+        <div class="y-label">£2.5k</div>
+        <div class="y-label">£2.0k</div>
+        <div class="y-label">£1.5k</div>
+        <div class="y-label">£1.0k</div>
+        <div class="y-label">£0.5k</div>
+        <div class="y-label">£0</div>
+      </div>
+      <div style="flex:1">
+        <div class="bars" id="bars"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer">Say "update the chart" in Claude after adding new months</p>
+
+  <script>
+    const MAX = 2500;
+    const HEIGHT = 200;
+
+    const views = {
+      overview: {
+        months: ["Jan 2026", "Feb 2026"],
+        series: [
+          { label: "Contributions", color: "#7c6ef5", values: [2293.58, 1974.15] },
+          { label: "Outgoings", color: "#e85d7a", values: [2272.53, 1974.15] }
+        ]
+      },
+      contributions: {
+        months: ["Jan 2026", "Feb 2026"],
+        series: [
+          { label: "Prince", color: "#7c6ef5", values: [2093.58, 1974.15] },
+          { label: "Clara", color: "#f59e0b", values: [200, 0] }
+        ]
+      },
+      outgoings: {
+        months: ["Jan 2026", "Feb 2026"],
+        series: [
+          { label: "Fixed", color: "#e85d7a", values: [1622.53, 1323.53] },
+          { label: "Variable", color: "#4ade80", values: [650, 650] }
+        ]
+      }
+    };
+
+    function showView(view, btn) {
+      document.querySelectorAll('.tab').forEach(t => { t.className = 'tab inactive'; });
+      btn.className = 'tab active';
+      render(view);
+    }
+
+    function fmt(v) { return '£' + v.toLocaleString('en-GB', { minimumFractionDigits: 0 }); }
+
+    function render(view) {
+      const { months, series } = views[view];
+      const barsEl = document.getElementById('bars');
+      const legendEl = document.getElementById('legend');
+
+      barsEl.innerHTML = months.map((month, mi) => `
+        <div class="group">
+          <div class="group-bars">
+            ${series.map(s => {
+              const h = Math.round((s.values[mi] / MAX) * HEIGHT);
+              return `<div class="bar-wrap">
+                <div class="bar-val">${fmt(s.values[mi])}</div>
+                <div class="bar" style="height:${h}px;background:${s.color}" title="${s.label}: ${fmt(s.values[mi])}"></div>
+              </div>`;
+            }).join('')}
+          </div>
+          <div class="month-label">${month}</div>
+        </div>
+      `).join('');
+
+      legendEl.innerHTML = series.map(s => `
+        <div class="legend-item">
+          <div class="legend-dot" style="background:${s.color}"></div>
+          ${s.label}
+        </div>
+      `).join('');
+    }
+
+    render('overview');
+  </script>
+</body>
+</html>
