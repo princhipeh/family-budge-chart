@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,6 +17,11 @@
     .card-row { display: flex; justify-content: space-between; }
     .card-out { font-size: 15px; font-weight: 600; color: #e85d7a; }
     .card-sublabel { font-size: 10px; color: #888; margin-top: 2px; }
+    .view-more { grid-column: 1 / -1; background: #1a1a2e; border-radius: 12px; padding: 16px; border: 1px solid #2a2a4a; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .view-more:hover { background: #252540; border-color: #3a3a5a; }
+    .view-more-text { color: #7c6ef5; font-size: 14px; font-weight: 600; }
+    .hidden-cards { display: none; }
+    .hidden-cards.show { display: grid; grid-column: 1 / -1; }
     .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .tab { padding: 7px 14px; border-radius: 20px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
     .tab.active { background: #7c6ef5; color: #fff; }
@@ -46,18 +50,9 @@
 <body>
 
 <h1>🏠 Family Budget — 2026</h1>
-<p class="subtitle">January, February & March 2026</p>
+<p class="subtitle">Recent months</p>
 
 <div class="cards">
-  <div class="card">
-    <div class="card-month">January 2026</div>
-    <div class="card-contrib">£2,293.58</div>
-    <div class="card-label">Contributions</div>
-    <div class="card-row">
-      <div><div class="card-out">£2,272.53</div><div class="card-sublabel">Outgoings</div></div>
-      <div style="text-align:right"><div style="font-size:15px;font-weight:600;color:#4ade80">+£21.05</div><div class="card-sublabel">Surplus</div></div>
-    </div>
-  </div>
   <div class="card">
     <div class="card-month">February 2026</div>
     <div class="card-contrib">£2,196.03</div>
@@ -74,6 +69,22 @@
     <div class="card-row">
       <div><div class="card-out">£2,296.03</div><div class="card-sublabel">Outgoings</div></div>
       <div style="text-align:right"><div style="font-size:15px;font-weight:600;color:#4ade80">+£0.00</div><div class="card-sublabel">Surplus</div></div>
+    </div>
+  </div>
+  
+  <div class="view-more" onclick="toggleHiddenCards()">
+    <div class="view-more-text">+ View More Months</div>
+  </div>
+
+  <div class="hidden-cards" id="hiddenCards">
+    <div class="card">
+      <div class="card-month">January 2026</div>
+      <div class="card-contrib">£2,293.58</div>
+      <div class="card-label">Contributions</div>
+      <div class="card-row">
+        <div><div class="card-out">£2,272.53</div><div class="card-sublabel">Outgoings</div></div>
+        <div style="text-align:right"><div style="font-size:15px;font-weight:600;color:#4ade80">+£21.05</div><div class="card-sublabel">Surplus</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -99,6 +110,7 @@
 
 <script>
   const months = ["Jan 2026", "Feb 2026", "Mar 2026"];
+  const visibleMonths = ["Feb 2026", "Mar 2026"];
 
   const views = {
     overview: {
@@ -131,6 +143,13 @@
   let activeView = 'overview';
   const fmt = v => '£' + v.toLocaleString('en-GB', {minimumFractionDigits:2,maximumFractionDigits:2});
 
+  function toggleHiddenCards() {
+    const hidden = document.getElementById('hiddenCards');
+    const viewMore = document.querySelector('.view-more');
+    hidden.classList.toggle('show');
+    viewMore.querySelector('.view-more-text').textContent = hidden.classList.contains('show') ? '- Hide Months' : '+ View More Months';
+  }
+
   function showView(view, btn) {
     document.querySelectorAll('.tab').forEach(t => t.className = 'tab inactive');
     btn.className = 'tab active';
@@ -141,18 +160,23 @@
   function render(view) {
     const { max, yLabels, series } = views[view];
     document.getElementById('yAxis').innerHTML = yLabels.map(l => `<div class="y-label">${l}</div>`).join('');
-    document.getElementById('bars').innerHTML = months.map((m, mi) => `
+    
+    // Get indices for visible months
+    const visibleIndices = visibleMonths.map(m => months.indexOf(m));
+    
+    document.getElementById('bars').innerHTML = visibleIndices.map(mi => `
       <div class="group">
         <div class="group-bars"
-          onmouseenter="showTip(event,'${m}',${mi})"
+          onmouseenter="showTip(event,'${months[mi]}',${mi})"
           onmouseleave="hideTip()">
           ${series.map(s => {
             const h = Math.max(2, Math.round((s.values[mi] / max) * HEIGHT));
             return `<div class="bar" style="height:${h}px;background:${s.color}"></div>`;
           }).join('')}
         </div>
-        <div class="month-label">${m}</div>
+        <div class="month-label">${months[mi]}</div>
       </div>`).join('');
+    
     document.getElementById('legend').innerHTML = series.map(s =>
       `<div class="legend-item"><div class="legend-dot" style="background:${s.color}"></div>${s.label}</div>`
     ).join('');
