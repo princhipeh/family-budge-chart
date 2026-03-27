@@ -1,7 +1,4 @@
 
-Index · HTML
-Copy
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,7 +46,7 @@ Copy
 <body>
 
 <h1>🏠 Family Budget — 2026</h1>
-<p class="subtitle">January & February 2026</p>
+<p class="subtitle">January, February & March 2026</p>
 
 <div class="cards">
   <div class="card">
@@ -63,11 +60,20 @@ Copy
   </div>
   <div class="card">
     <div class="card-month">February 2026</div>
-    <div class="card-contrib">£1,753.00</div>
+    <div class="card-contrib">£2,196.03</div>
     <div class="card-label">Contributions</div>
     <div class="card-row">
-      <div><div class="card-out">£1,652.53</div><div class="card-sublabel">Outgoings</div></div>
-      <div style="text-align:right"><div style="font-size:15px;font-weight:600;color:#4ade80">+£100.47</div><div class="card-sublabel">Surplus</div></div>
+      <div><div class="card-out">£1,752.53</div><div class="card-sublabel">Outgoings</div></div>
+      <div style="text-align:right"><div style="font-size:15px;font-weight:600;color:#4ade80">+£443.50</div><div class="card-sublabel">Surplus</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-month">March 2026</div>
+    <div class="card-contrib">£2,296.03</div>
+    <div class="card-label">Contributions</div>
+    <div class="card-row">
+      <div><div class="card-out">£2,296.03</div><div class="card-sublabel">Outgoings</div></div>
+      <div style="text-align:right"><div style="font-size:15px;font-weight:600;color:#4ade80">+£0.00</div><div class="card-sublabel">Surplus</div></div>
     </div>
   </div>
 </div>
@@ -92,31 +98,31 @@ Copy
 <div class="tooltip" id="tooltip"></div>
 
 <script>
-  const months = ["Jan 2026", "Feb 2026"];
+  const months = ["Jan 2026", "Feb 2026", "Mar 2026"];
 
   const views = {
     overview: {
       max: 3000,
       yLabels: ["£3.0k","£2.5k","£2.0k","£1.5k","£1.0k","£0.5k","£0"],
       series: [
-        { label:"Contributions", color:"#7c6ef5", values:[2293.58, 1753] },
-        { label:"Outgoings",     color:"#e85d7a", values:[2272.53, 1652.53] }
+        { label:"Contributions", color:"#7c6ef5", values:[2293.58, 2196.03, 2296.03] },
+        { label:"Outgoings",     color:"#e85d7a", values:[2272.53, 1752.53, 2296.03] }
       ]
     },
     contributions: {
       max: 3000,
       yLabels: ["£3.0k","£2.5k","£2.0k","£1.5k","£1.0k","£0.5k","£0"],
       series: [
-        { label:"Prince", color:"#7c6ef5", values:[2093.58, 1753] },
-        { label:"Clara",  color:"#f59e0b", values:[200, 0] }
+        { label:"Prince", color:"#7c6ef5", values:[2093.58, 1896.03, 1896.03] },
+        { label:"Clara",  color:"#f59e0b", values:[200, 300, 400] }
       ]
     },
     outgoings: {
       max: 2500,
       yLabels: ["£2.5k","£2.0k","£1.5k","£1.0k","£0.5k","£0"],
       series: [
-        { label:"Fixed",    color:"#e85d7a", values:[1622.53, 1102.53] },
-        { label:"Variable", color:"#4ade80", values:[650, 550] }
+        { label:"Fixed",    color:"#e85d7a", values:[1622.53, 1202.53, 1186.33] },
+        { label:"Variable", color:"#4ade80", values:[650, 550, 784] }
       ]
     }
   };
